@@ -154,10 +154,15 @@ After calling set_dashboard_filters, briefly confirm what you changed in one sho
 
     config = copilotkit_customize_config(config)
 
+    # CopilotKit HTTP runs often send partial state (filters only). Frontend actions
+    # arrive under state["copilotkit"]["actions"] once merged; default to [].
+    ck = state.get("copilotkit") or {}
+    frontend_actions = list(ck.get("actions") or [])
+
     model = ChatOpenAI(model="gpt-4o-mini", temperature=0.1)
     model_with_tools = model.bind_tools(
         [
-            *state["copilotkit"]["actions"],
+            *frontend_actions,
             SET_DASHBOARD_FILTERS_TOOL,
             GET_CYBER_RISK_SNAPSHOT_TOOL,
         ],

@@ -28,7 +28,7 @@
     "@copilotkit/react-core": "^1.54.0",
     "@copilotkit/react-ui": "^1.54.0",
     "@copilotkit/runtime": "^1.54.0",
-    "@copilotkitnext/runtime": "^0.0.33",
+    "@copilotkitnext/runtime": "1.54.0",
     "@langchain/langgraph-sdk": "^1.8.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",

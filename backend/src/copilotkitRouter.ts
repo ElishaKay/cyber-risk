@@ -1,33 +1,54 @@
-import { CopilotRuntime } from "@copilotkit/runtime";
-import { LangGraphAgent } from "@copilotkit/runtime/langgraph";
+import { CopilotRuntime } from "@copilotkit/runtime/v2";
 import { createCopilotEndpointSingleRouteExpress } from "@copilotkitnext/runtime/express";
-import type { CopilotRuntime as CopilotRuntimeVNext } from "@copilotkitnext/runtime";
 import type { Router } from "express";
+import {
+  HistoryHydratingAgentRunner,
+  createIsolatedAgent
+} from "./copilotkit-agent-runner/index.ts";
 
 /**
  * CopilotKit single-route handler backed by the LangGraph `cyber_risk` deployment.
- * Set LANGGRAPH_DEPLOYMENT_URL to your `langgraph dev` URL (see AGENTS_README.md).
+ * Mirrors `docs/nextjs/src/app/api/copilotkit/route.ts`: isolated LangGraph client,
+ * history hydration from the LangGraph API, and the v2 runtime stack.
+ *
+ * Env: LANGGRAPH_DEPLOYMENT_URL (e.g. http://localhost:8000), LANGGRAPH_GRAPH_ID, optional LANGSMITH_API_KEY.
  */
-export function createCyberRiskCopilotRouter(): Router {
+function createCyberRiskCopilotRuntime(): CopilotRuntime {
   const deploymentUrl = (process.env.LANGGRAPH_DEPLOYMENT_URL ?? "http://127.0.0.1:8000").replace(
     /\/$/,
     ""
   );
   const graphId = process.env.LANGGRAPH_GRAPH_ID ?? "cyber_risk";
+  const langsmithApiKey = process.env.LANGSMITH_API_KEY;
+  const debug = process.env.NODE_ENV !== "production";
 
-  const agent = new LangGraphAgent({
+  const agent = createIsolatedAgent({
     deploymentUrl,
     graphId,
-    langsmithApiKey: process.env.LANGSMITH_API_KEY
+    langsmithApiKey,
+    debug
   });
 
-  const runtime = new CopilotRuntime({
-    agents: { [graphId]: agent }
+  const runner = new HistoryHydratingAgentRunner({
+    agent,
+    deploymentUrl,
+    graphId,
+    langsmithApiKey,
+    historyLimit: 100,
+    debug
   });
+
+  return new CopilotRuntime({
+    agents: { [graphId]: agent },
+    runner
+  });
+}
+
+export function createCyberRiskCopilotRouter(): Router {
+  const runtime = createCyberRiskCopilotRuntime();
 
   return createCopilotEndpointSingleRouteExpress({
-    // @copilotkit/runtime nests a copy of @copilotkitnext/runtime; align types for the express helper.
-    runtime: runtime.instance as unknown as CopilotRuntimeVNext,
+    runtime,
     basePath: "/api/copilotkit"
   });
 }
