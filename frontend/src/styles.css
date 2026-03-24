@@ -9,6 +9,58 @@ body {
   color: #e2e8f0;
 }
 
+.app-thread-bar {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 24px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+
+.app-thread-bar-label {
+  flex-shrink: 0;
+}
+
+.app-thread-select {
+  font-size: 0.9rem;
+  padding: 6px 10px;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #e2e8f0;
+  min-width: 120px;
+  max-width: 280px;
+}
+
+.app-thread-select:focus {
+  outline: none;
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+
+.app-thread-select:disabled {
+  opacity: 0.6;
+}
+
+.app-new-thread {
+  padding: 6px 12px;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #7dd3fc;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.app-new-thread:hover {
+  border-color: #38bdf8;
+  color: #e0f2fe;
+}
+
 .container {
   max-width: 1200px;
   margin: 0 auto;

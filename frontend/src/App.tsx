@@ -2,23 +2,11 @@ import { CopilotKit, useCoAgent } from "@copilotkit/react-core";
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
+import { threadLabel, useCyberRiskThreadIds } from "./hooks/useCyberRiskThreadIds";
 
 const COPILOT_AGENT_ID = import.meta.env.VITE_LANGGRAPH_GRAPH_ID ?? "cyber_risk";
 
 const MAX_VULN_SNAPSHOT_ROWS = 500;
-
-function getSessionCopilotThreadId(): string {
-  const key = "cyber_risk_copilot_thread_id";
-  try {
-    const existing = sessionStorage.getItem(key);
-    if (existing) return existing;
-    const id = crypto.randomUUID();
-    sessionStorage.setItem(key, id);
-    return id;
-  } catch {
-    return crypto.randomUUID();
-  }
-}
 
 type Severity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" | "UNKNOWN";
 
@@ -391,24 +379,50 @@ function DashboardContent() {
 }
 
 export function App() {
-  const [threadId] = useState(getSessionCopilotThreadId);
+  const { threadIds, threadId, setThreadId, addNewThread, hydrated } = useCyberRiskThreadIds();
 
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit" agent={COPILOT_AGENT_ID} threadId={threadId}>
-      <DashboardContent />
-      <CopilotSidebar
-        defaultOpen={false}
-        labels={{
-          title: "Risk copilot",
-          initial:
-            'Try: "Show only critical CVEs", "Filter vendor to Microsoft", or "Clear all filters".'
-        }}
-        instructions={
-          "You are the in-app assistant for the vulnerability risk dashboard. " +
-          "Use tools to update dashboard filters. For summaries of the visible table, follow the agent flow: " +
-          "set filters, refresh the vulnerability table snapshot into shared state, then summarize that data only."
-        }
-      />
-    </CopilotKit>
+    <>
+      <header className="app-thread-bar" aria-label="Copilot conversation">
+        <span className="app-thread-bar-label">Thread</span>
+        <select
+          className="app-thread-select"
+          value={threadId}
+          onChange={(e) => setThreadId(e.target.value)}
+          disabled={!hydrated}
+          aria-label="Select conversation thread"
+        >
+          {(threadIds.length > 0 ? threadIds : [threadId]).map((id) => (
+            <option key={id} value={id}>
+              {threadLabel(id)}
+            </option>
+          ))}
+        </select>
+        <button type="button" className="app-new-thread" onClick={() => addNewThread()}>
+          New thread
+        </button>
+      </header>
+      <CopilotKit
+        runtimeUrl="/api/copilotkit"
+        agent={COPILOT_AGENT_ID}
+        threadId={threadId}
+        key={threadId}
+      >
+        <DashboardContent />
+        <CopilotSidebar
+          defaultOpen={false}
+          labels={{
+            title: "Risk copilot",
+            initial:
+              'Try: "Show only critical CVEs", "Filter vendor to Microsoft", or "Clear all filters".'
+          }}
+          instructions={
+            "You are the in-app assistant for the vulnerability risk dashboard. " +
+            "Use tools to update dashboard filters. For summaries of the visible table, follow the agent flow: " +
+            "set filters, refresh the vulnerability table snapshot into shared state, then summarize that data only."
+          }
+        />
+      </CopilotKit>
+    </>
   );
 }

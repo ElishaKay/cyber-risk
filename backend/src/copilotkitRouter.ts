@@ -11,6 +11,10 @@ import {
  * Mirrors `docs/nextjs/src/app/api/copilotkit/route.ts`: isolated LangGraph client,
  * history hydration from the LangGraph API, and the v2 runtime stack.
  *
+ * Conversation threads are identified by the client `threadId` (CopilotKit prop). The
+ * `HistoryHydratingAgentRunner` loads LangGraph thread history for that id on each run;
+ * no extra thread APIs are required on this server (see `docs/nextjs` play page UX).
+ *
  * Env: LANGGRAPH_DEPLOYMENT_URL (e.g. http://localhost:8000), LANGGRAPH_GRAPH_ID, optional LANGSMITH_API_KEY.
  */
 function createCyberRiskCopilotRuntime(): CopilotRuntime {
