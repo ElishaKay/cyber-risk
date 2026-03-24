@@ -1,0 +1,45 @@
+{
+  "name": "cyber-risk",
+  "version": "1.0.0",
+  "description": "Mini full-stack vulnerability risk dashboard",
+  "scripts": {
+    "dev": "npm run dev:backend",
+    "dev:backend": "tsx watch backend/src/server.ts",
+    "dev:frontend": "vite --config frontend/vite.config.ts",
+    "build": "npm run build:frontend",
+    "build:frontend": "vite build --config frontend/vite.config.ts",
+    "test": "vitest run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ElishaKay/cyber-risk.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/ElishaKay/cyber-risk/issues"
+  },
+  "homepage": "https://github.com/ElishaKay/cyber-risk#readme",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "pg": "^8.20.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.5.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.2",
+    "vitest": "^4.1.1"
+  }
+}
