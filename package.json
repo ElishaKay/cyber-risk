@@ -4,6 +4,7 @@
   "description": "Mini full-stack vulnerability risk dashboard",
   "scripts": {
     "dev": "npm run dev:backend",
+    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "tsx watch backend/src/server.ts",
     "dev:frontend": "vite --config frontend/vite.config.ts",
     "build": "npm run build:frontend",
@@ -35,6 +36,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "concurrently": "^9.2.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "tsx": "^4.21.0",
