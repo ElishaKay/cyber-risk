@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import * as THREE from "three";
 
 type Severity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" | "UNKNOWN";
 
@@ -24,12 +25,72 @@ function scoreColor(score: number): string {
 }
 
 export function App() {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [severityFilter, setSeverityFilter] = useState<string>("");
   const [sortDesc, setSortDesc] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [rows, setRows] = useState<Vulnerability[]>([]);
   const [stats, setStats] = useState<StatsResponse | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+    camera.position.z = 4;
+
+    const geometry = new THREE.IcosahedronGeometry(1.3, 1);
+    const material = new THREE.MeshStandardMaterial({
+      color: 0x7dd3fc,
+      emissive: 0x082f49,
+      roughness: 0.32,
+      metalness: 0.68,
+      wireframe: true
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    scene.add(new THREE.AmbientLight(0x7dd3fc, 0.45));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 0.9);
+    keyLight.position.set(3, 3, 5);
+    scene.add(keyLight);
+
+    const resize = () => {
+      const width = canvas.clientWidth || 320;
+      const height = canvas.clientHeight || 220;
+      renderer.setSize(width, height, false);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    let frameId = 0;
+    const animate = () => {
+      frameId = requestAnimationFrame(animate);
+      mesh.rotation.x += 0.003;
+      mesh.rotation.y += 0.006;
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      window.removeEventListener("resize", resize);
+      geometry.dispose();
+      material.dispose();
+      renderer.dispose();
+    };
+  }, []);
+
+  useEffect(() => {
+    void loadData();
+  }, []);
 
   async function loadData() {
     setLoading(true);
@@ -59,26 +120,32 @@ export function App() {
 
   return (
     <main className="container">
-      <h1>Vulnerability Risk Dashboard</h1>
-      <p className="subtle">Risk = CVSS(60%) + exploitability(20%) + age(20%)</p>
-
-      <section className="controls">
-        <label>
-          Severity filter:
-          <select value={severityFilter} onChange={(e) => setSeverityFilter(e.target.value)}>
-            <option value="">All</option>
-            <option value="LOW">LOW</option>
-            <option value="MEDIUM">MEDIUM</option>
-            <option value="HIGH">HIGH</option>
-            <option value="CRITICAL">CRITICAL</option>
-          </select>
-        </label>
-        <button onClick={() => setSortDesc((prev) => !prev)}>Sort by Risk: {sortDesc ? "High -> Low" : "Low -> High"}</button>
-        <button onClick={loadData}>Load Data</button>
+      <section className="hero">
+        <div className="hero-copy">
+          <h1>Vulnerability Risk Dashboard</h1>
+          <p className="subtle">Risk = CVSS(60%) + exploitability(20%) + age(20%)</p>
+          <div className="controls">
+            <label>
+              Severity filter:
+              <select value={severityFilter} onChange={(e) => setSeverityFilter(e.target.value)}>
+                <option value="">All</option>
+                <option value="LOW">LOW</option>
+                <option value="MEDIUM">MEDIUM</option>
+                <option value="HIGH">HIGH</option>
+                <option value="CRITICAL">CRITICAL</option>
+              </select>
+            </label>
+            <button onClick={() => setSortDesc((prev) => !prev)}>
+              Sort by Risk: {sortDesc ? "High -> Low" : "Low -> High"}
+            </button>
+            <button onClick={loadData}>Refresh</button>
+          </div>
+        </div>
+        <canvas ref={canvasRef} className="hero-canvas" aria-hidden="true" />
       </section>
 
       {error && <p className="error">{error}</p>}
-      {loading && <p>Loading vulnerability data...</p>}
+      {loading && <p className="status">Loading vulnerability data...</p>}
 
       {stats && (
         <section className="panel">
@@ -92,10 +159,11 @@ export function App() {
             ))}
           </div>
           <h3>Top Vendors</h3>
-          <ul>
+          <ul className="vendors">
             {stats.topVendors.map((v) => (
               <li key={v.vendor}>
-                {v.vendor}: {v.count}
+                <span>{v.vendor}</span>
+                <strong>{v.count}</strong>
               </li>
             ))}
           </ul>
@@ -118,7 +186,7 @@ export function App() {
             {sortedRows.map((row) => (
               <tr key={row.id}>
                 <td>{row.id}</td>
-                <td title={row.description}>{row.description.slice(0, 120)}...</td>
+                <td title={row.description}>{row.description.length > 120 ? `${row.description.slice(0, 120)}...` : row.description}</td>
                 <td>{row.severity}</td>
                 <td>
                   <span className={`badge ${scoreColor(row.riskScore)}`}>{row.riskScore}</span>
